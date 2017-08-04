@@ -103,12 +103,12 @@ class Product extends B2cModel
      */
     public function newitems($conArr, $serial, $params, $price = 1, $page = 1, $pagesize = 8){
         if(strlen($serial) >4){
-            $row = $this->ModelQueryAll("SELECT DISTINCT(style_sn) FROM {{product}} WHERE model_sn LIKE '" . $serial . "%'  AND disabled = 'false' and is_down='0'");
+            $row = $this->ModelQueryAll("SELECT DISTINCT(style_sn) FROM {{product}} WHERE model_sn LIKE '" . $serial . "%'  AND disabled = 'false' and is_down='0' AND purchase_id = {$params['purchase_id']}");
             if (!$row) return array();
             $items = $this->listModelSn($row, $params, $conArr);
         }else{
             if (!empty($serial)) {
-                $sql = "SELECT DISTINCT(style_sn) FROM {{product}} WHERE serial_num  ='{$serial}' AND disabled = 'false' AND is_down='0' ORDER BY serial_num ASC";
+               $sql = "SELECT DISTINCT(style_sn) FROM {{product}} WHERE serial_num  ='{$serial}' AND disabled = 'false' AND is_down='0' AND purchase_id = {$params['purchase_id']} ORDER BY serial_num ASC";
                 $row = $this->ModelQueryAll($sql);
                 if (!$row) return array();
                 $items = $this->listSerials($row, $params, $conArr);
@@ -415,9 +415,10 @@ class Product extends B2cModel
     {
         $size_list = $this->tableValue('size', 'size_name', 'size_id');
         $color_list = $this->tableValue('color', 'color_name', 'color_id');
-        $items = Yii::app()->cache->get('model-product-list-' . Yii::app()->session['purchase_id']);
+        $purchaseId = Yii::app()->session['purchase_id'];
+        $items = Yii::app()->cache->get('model-product-list-' . $purchaseId);
         if (!$items) {
-            $sql = "SELECT * FROM {{product}} WHERE disabled = 'false'";
+             $sql = "SELECT * FROM {{product}} WHERE disabled = 'false' AND purchase_id = {$purchaseId}";
             $list = $this->ModelQueryAll($sql);
             foreach ($list as $v) {
                 $item = $v;
